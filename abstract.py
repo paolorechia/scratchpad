@@ -4,7 +4,7 @@ to build concrete implementations of database connections and
 database readers.
 """
 
-from typing import Optional
+from typing import Optional, Iterable
 import abc
 
 class AbstractDatabaseExpression:
@@ -22,6 +22,7 @@ class AbstractDatabaseTable:
 class AbstractDatabaseConnection:
     def __init__(self) -> None:
         self.connected = False
+        self._tables = set()
 
     @abc.abstractmethod
     def connect(self):
@@ -32,7 +33,11 @@ class AbstractDatabaseConnection:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_tables(self) -> AbstractDatabaseTable:
+    def get_tables(self) -> Iterable[AbstractDatabaseTable]:
+        raise NotImplementedError()
+
+    @abc.abstractclassmethod
+    def create_table(self, table: AbstractDatabaseTable):
         raise NotImplementedError()
 
     def __enter__(self):
