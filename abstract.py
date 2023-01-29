@@ -7,29 +7,6 @@ database readers.
 from typing import Optional
 import abc
 
-class AbstractDatabaseConnection:
-    def __init__(self) -> None:
-        self.connected = False
-
-    @abc.abstractmethod
-    def connect(self):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def disconnect(self):
-        raise NotImplementedError()
-
-    def __enter__(self):
-        if not self.connected:
-            self.connected = True
-            self.db_conn.connect()
-
-    def __exit__(self, *args, **kwargs):
-        if self.connected:
-            self.connected = False
-            self.db_conn.disconnect()
-
-
 class AbstractDatabaseExpression:
     @abc.abstractclassmethod
     def __getitem__(self, expr: Optional["AbstractDatabaseExpression"]):
@@ -42,12 +19,46 @@ class AbstractDatabaseTable:
         raise NotImplementedError()
 
 
-class AbstractDatabaseSQLReader:
+class AbstractDatabaseConnection:
+    def __init__(self) -> None:
+        self.connected = False
+
+    @abc.abstractmethod
+    def connect(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def disconnect(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_tables(self) -> AbstractDatabaseTable:
+        raise NotImplementedError()
+
+    def __enter__(self):
+        if not self.connected:
+            self.connected = True
+            self.connect()
+
+    def __exit__(self, *args, **kwargs):
+        if self.connected:
+            self.connected = False
+            self.disconnect()
+
+
+
+class AbstractDatabaseQuerier:
     def __init__(self, db_conn: AbstractDatabaseConnection):
         self.db_conn = db_conn
 
     @abc.abstractclassmethod
     def __getattribute__(self, name: str) -> AbstractDatabaseTable:
+        """Fetches a table from the Database."""
+        raise NotImplementedError()
+
+    @abc.abstractclassmethod
+    def __setattr__(self, name: str, table: AbstractDatabaseTable) -> None:
+        """Creates a table into the Database."""
         raise NotImplementedError()
 
     def __enter__(self):
